@@ -20,5 +20,5 @@ echo $infile $R2 $base;
 trimmomatic PE -threads 4 $infile $R2 \
 ${base}.1.trim.fastq.gz ${base}.1.un.trim.fastq.gz \
 ${base}.2.trim.fastq.gz ${base}.2.un.trim.fastq.gz \
-SLIDINGWINDOW:4:20 MINLEN:25 ILLUMINACLIP: /opt/nesi/CS400_centos7_bdw/Trimmomatic/0.39-Java-1.8.0_144/adapters/NexteraPE-PE.fa
+SLIDINGWINDOW:4:20 MINLEN:25 ILLUMINACLIP:/opt/nesi/CS400_centos7_bdw/Trimmomatic/0.39-Java-1.8.0_144/adapters/NexteraPE-PE.fa:2:40:15
 done
