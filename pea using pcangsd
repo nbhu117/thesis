@@ -1,0 +1,25 @@
+#!/bin/bash -e
+#SBATCH --job-name=FastQC
+#SBATCH --account=uoa02626
+#SBATCH --time=72:00:00
+#SBATCH --mem=36GB
+#SBATCH --mail-user=nbhu117@aucklanduni.ac.nzan
+#SBATCH --mail-type=ALL
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=18
+#SBATCH -D /nesi/nobackup/uoa02626/pcangsd/
+
+module load Python-Geo/3.8.2-gimkl-2020a
+
+for fq1 in /nesi/nobackup/uoa02626/pcangsd/beagle/*.beagle.gz
+do
+echo "working with file $fq1"
+
+base=$(basename -s .beagle.gz $fq1) #check the final file created by angsd first.
+echo "base name is $base"
+
+fq1=/nesi/nobackup/uoa02626/pcangsd/beagle/${base}.beagle.gz
+
+python /nesi/nobackup/uoa02626/pcangsd/pcangsd/pcangsd.py -beagle $fq1 -out PCAngsd —threads 18
+
+done
