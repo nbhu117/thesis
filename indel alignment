@@ -1,0 +1,56 @@
+#!/bin/bash -e
+#SBATCH --job-name=FastQC
+#SBATCH --account=uoa02626
+#SBATCH --time=72:00:00
+#SBATCH --mem=36GB
+#SBATCH --mail-user=nbhu117@aucklanduni.ac.nz
+#SBATCH --mail-type=ALL
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=18
+#SBATCH -D /nesi/nobackup/uoa02626/results/
+
+module load GATK/3.8-1
+module load SAMtools/1.10-GCC-9.2.0
+
+SAMPLEBAM=/nesi/nobackup/uoa02626/results/*.sorted.bam
+
+BAMLIST=/nesi/nobackup/uoa02626/results/merged_bam/bam_list_dedup_overlapclipped.list 
+
+REFERENCE=/nesi/nobackup/uoa02626/results/GCF_004348235.1_GSC_HSeal_1.0_genomic.fna.gz 
+
+REFNAME=indel_aligned 
+
+for SAMPLEBAM in  /nesi/nobackup/uoa02626/results/merged_bam/merged_bam_list.txt
+do
+echo /nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_sorted_dedup_overlapclipped.bam >> $BAMLIST
+done
+
+cd /nesi/nobackup/uoa02626/results/merged_bam/
+for SAMPLEBAM in $BAMLIST
+do
+
+if [ -e $SAMPLEBAM'.bai' ]
+then
+    echo "the file already exists"
+else
+    ## Index bam files
+    samtools index $SAMPLEBAM
+fi
+
+done
+
+gatk
+-T RealignerTargetCreator \
+-R $REFERENCE \
+-I $BAMLIST \
+-o /nesi/nobackup/uoa02626/results/merged_bam/all_samples_for_indel_realigner.intervals\
+-drf BadMate
+
+gatk
+-T IndelRealigner \
+-R $REFERENCE \
+-I $BAMLIST \
+-targetIntervals /‘nesi/nobackup/uoa02626/results/merged_bam/all_samples_for_indel_realigner.intervals' \
+--consensusDeterminationModel USE_READS  \
+--nWayOut _realigned.bam
+done
