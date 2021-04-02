@@ -1,0 +1,29 @@
+#!/bin/bash -e
+#SBATCH --job-name=FastQC
+#SBATCH --account=uoa02626
+#SBATCH --time=72:00:00
+#SBATCH --mem=36GB
+#SBATCH --mail-user=nbhu117@aucklanduni.ac.nz
+#SBATCH --mail-type=ALL
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=18
+#SBATCH -D /nesi/nobackup/uoa02626/results/
+
+mkdir /nesi/nobackup/uoa02626/results/merged_bam/
+
+module load picard/2.21.8-Java-11.0.4
+
+BAMLIST=/nesi/nobackup/uoa02626/results/merged_bam/
+REFNAME=clipped_files  #Reference name to add to output files
+
+for SAMPLEBAM in $BAMLIST
+do
+ 
+SAMPLEBAM=/nesi/nobackup/uoa02626/results/*.sorted.bam
+    
+picard MarkDuplicates I=/nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted.bam O=/nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dedup.bam M=/nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dupstat.txt VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true
+
+#BamUtil
+ /nesi/nobackup/uoa02626/results/bamUtil/bin/bam clipOverlap --in /nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dedup.bam --out /nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dedup_overlapclipped.bam --stats
+
+done
