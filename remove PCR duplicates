@@ -1,29 +1,32 @@
 #!/bin/bash -e
 #SBATCH --job-name=FastQC
 #SBATCH --account=uoa02626
-#SBATCH --time=72:00:00
+#SBATCH --time=48:00:00
 #SBATCH --mem=36GB
 #SBATCH --mail-user=nbhu117@aucklanduni.ac.nz
 #SBATCH --mail-type=ALL
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=18
-#SBATCH -D /nesi/nobackup/uoa02626/results/
+#SBATCH --cpus-per-task=1
+#SBATCH -D /nesi/nobackup/uoa02626/results/merge_bam/
 
-mkdir /nesi/nobackup/uoa02626/results/merged_bam/
-
+module load GATK/4.1.8.1-gimkl-2020a
 module load picard/2.21.8-Java-11.0.4
 
-BAMLIST=/nesi/nobackup/uoa02626/results/merged_bam/
+BAMLIST=/nesi/nobackup/uoa02626/results/merge_bam/*.merged.sorted.bam
+
 REFNAME=clipped_files  #Reference name to add to output files
 
 for SAMPLEBAM in $BAMLIST
 do
- 
-SAMPLEBAM=/nesi/nobackup/uoa02626/results/*.sorted.bam
-    
-picard MarkDuplicates I=/nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted.bam O=/nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dedup.bam M=/nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dupstat.txt VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true
+
+base=$(basename -s .merged.sorted.bam $SAMPLEBAM)
+
+# Not a good idea to redefine variables within a loop
+#SAMPLEBAM=/nesi/nobackup/uoa02626/results/merge_bam/${base}.merged.sorted.bam
+
+picard MarkDuplicates I=$SAMPLEBAM O=${base}_${REFNAME}_sorted_dedup.bam M=${base}_${REFNAME}_sorted_dupstat.txt VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true
 
 #BamUtil
- /nesi/nobackup/uoa02626/results/bamUtil/bin/bam clipOverlap --in /nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dedup.bam --out /nesi/nobackup/uoa02626/results/merged_bam/$SAMPLEBAM_$REFNAME_sorted_dedup_overlapclipped.bam --stats
+ /nesi/nobackup/uoa02626/results/bamUtil/bin/bam clipOverlap --in ${base}_${REFNAME}_sorted_dedup.bam --out ${base}_${REFNAME}_sorted_dedup_overlapclipped.bam --stats
 
 done
