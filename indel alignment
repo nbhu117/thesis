@@ -36,7 +36,7 @@ gatk
 -T IndelRealigner \
 -R ${REFERENCE} \
 -I ${BAMLIST} \
--targetIntervals /nesi/nobackup/uoa02626/results/merge_bam/${base}all_samples_for_indel_realigner.intervals \
+-targetIntervals /nesi/nobackup/uoa02626/results/merge_bam/${base}.all_samples_for_indel_realigner.intervals \
 --consensusDeterminationModel USE_READS  \
 --nWayOut _realigned.bam
 
