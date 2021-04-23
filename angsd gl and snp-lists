@@ -1,0 +1,50 @@
+#!/bin/bash -e
+#SBATCH --job-name=FastQC
+#SBATCH --account=uoa02626
+#SBATCH --time=72:00:00
+#SBATCH --mem=36GB
+#SBATCH --mail-user=nbhu117@aucklanduni.ac.nzan
+#SBATCH --mail-type=ALL
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=18
+#SBATCH -D /nesi/nobackup/uoa02626/pcangsd/
+
+
+module load SAMtools/1.10-GCC-9.2.0
+module load BEDTools/2.29.2-GCC-9.2.0
+module load angsd/0.923-gimkl-2017a
+module load Python-Geo/3.8.2-gimkl-2020a
+
+for fq1 in /nesi/nobackup/uoa02626/pcangsd/bamfiles/*clipped_files_sorted_dedup_overlapclipped_realigned.bam #indel aligned files
+do
+echo "working with file $fq1"
+
+base=$(basename -s _clipped_files_sorted_dedup_overlapclipped_realigned.bam $fq1)
+echo "base name is $base"
+
+
+fq1=/nesi/nobackup/uoa02626/pcangsd/bamfiles/${base}_clipped_files_sorted_dedup_overlapclipped_realigned.bam #indelfiles
+
+BASEDIR=/nesi/nobackup/uoa02626/pcangsd/
+BAMDIR=$BASEDIR/bamfiles/
+REFDIR=/nesi/nobackup/uoa02626/results/ GCF_004348235.1_GSC_HSeal_1.0_genomic.fna
+OUTDIR=$BASEDIR/beagle/
+
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/angsd -GL 2 -out $base_genolike -nThreads 18 -doGlf 2 -doMajorMinor 1 -SNP_pval 1e-6 -doMaf 1 -bam $fq1
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/angsd -b $fq1-anc $REFDIR -out $OUTDIR /
+	-minMapQ 20 -minQ 20 -doMaf 1 -minMaf 0.05 -SNP_pval 2e-6 \
+	-GL 2 -doGlf 2 -doMajorMinor 1 -doPost 1
+
+gunzip -c SNPs.mafs.gz | cut -f 1,2,3,4 | tail -n +2 > SNPList_$base_SNPs.txt
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/angsd sites index SNPList_$base_SNPs.txt
+
+SNPLIST=SNPList_$base_SNPs.txt
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/angsd -b $fq1 -anc $REFDIR -out $OUTDIR/$base_SNPs \
+	-GL 2 -doGlf 2 -doMajorMinor 3 -doMAF 1 -doPost 1 -doIBS 1 -doCounts 1 -doCov 1 -makeMatrix 1 -sites $SNPlist
+
+
+done
