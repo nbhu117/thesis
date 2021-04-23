@@ -2,42 +2,54 @@
 #SBATCH --job-name=FastQC
 #SBATCH --account=uoa02626
 #SBATCH --time=72:00:00
-#SBATCH --mem=36GB
+#SBATCH --mem=36gb
 #SBATCH --mail-user=nbhu117@aucklanduni.ac.nz
 #SBATCH --mail-type=ALL
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=18
+#SBATCH --cpus-per-task=1
 #SBATCH -D /nesi/nobackup/uoa02626/results/merge_bam/
 
-module load GATK/4.1.8.1-gimkl-2020a
+module load  picard/2.1.0
+#module load picard/2.21.8-Java-11.0.4
+module load Java/1.8.0_144
+module load GATK/3.8-1
 module load SAMtools/1.10-GCC-9.2.0
 
+export JAVA_HOME=/usr/local/jdk1.8.0_121
+export PATH=$JAVA_HOME/bin:$PATH
+
+picard CreateSequenceDictionary REFERENCE=/nesi/nobackup/uoa02626/results/GCF_004348235.1_GSC_HSeal_1.0_genomic.fna
 
 BAMLIST=/nesi/nobackup/uoa02626/results/merge_bam/*_sorted_dedup_overlapclipped.bam
 
-REFERENCE=/nesi/nobackup/uoa02626/results/GCF_004348235.1_GSC_HSeal_1.0_genomic.fna.gz 
+REFERENCE=/nesi/nobackup/uoa02626/results/GCF_004348235.1_GSC_HSeal_1.0_genomic.fna
 
-REFNAME=indel_aligned 
+REFNAME=indel_aligned
 
 for SAMPLEBAM in  $BAMLIST
 do
-base=$(basename -s .merge.sorted.bam $SAMPLEBAM)
+base=$(basename -s _clipped_files_sorted_dedup_overlapclipped.bam $SAMPLEBAM)
+
+java -jar $PICARD AddOrReplaceReadGroups /
+I=/nesi/nobackup/uoa02626/results/sam/${base}_L004_R1_001.aligned.sam /
+O=/nesi/nobackup/uoa02626/results/merge_bam/${base}_clipped_files_sorted_dedup_overlapclipped.bam
 
 samtools index ${SAMPLEBAM}
 
-gatk
--T RealignerTargetCreator \
--R ${REFERENCE} \
--I ${BAMLIST} \
--o /nesi/nobackup/uoa02626/results/merge_bam/${base}.all_samples_for_indel_realigner.intervals \
+java -jar $GATK /
+-T RealignerTargetCreator /
+-R ${REFERENCE} /
+-I /nesi/nobackup/uoa02626/results/merge_bam/${base}_clipped_files_sorted_dedup_overlapclipped.bam /
+-o /nesi/nobackup/uoa02626/results/merge_bam/${base}.all_samples_for_indel_realigner.intervals /
 -drf BadMate
 
-gatk
--T IndelRealigner \
--R ${REFERENCE} \
--I ${BAMLIST} \
--targetIntervals /nesi/nobackup/uoa02626/results/merge_bam/${base}.all_samples_for_indel_realigner.intervals \
---consensusDeterminationModel USE_READS  \
+java -jar $GATK /
+-T IndelRealigner /
+-R ${REFERENCE} /
+-I /nesi/nobackup/uoa02626/results/merge_bam/${base}_clipped_files_sorted_dedup_overlapclipped.bam /
+-targetIntervals /nesi/nobackup/uoa02626/results/merge_bam/${base}.all_samples_for_indel_realigner.intervals /
+--consensusDeterminationModel USE_READS /
 --nWayOut _realigned.bam
 
 done
+
