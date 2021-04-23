@@ -21,10 +21,7 @@ do
 
 base=$(basename -s .merged.sorted.bam $SAMPLEBAM)
 
-# Not a good idea to redefine variables within a loop
-#SAMPLEBAM=/nesi/nobackup/uoa02626/results/merge_bam/${base}.merged.sorted.bam
-
-picard MarkDuplicates I=$SAMPLEBAM O=${base}_${REFNAME}_sorted_dedup.bam M=${base}_${REFNAME}_sorted_dupstat.txt VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true
+picard MarkDuplicates I=${SAMPLEBAM} O=${base}_${REFNAME}_sorted_dedup.bam M=${base}_${REFNAME}_sorted_dupstat.txt VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true
 
 #BamUtil
  /nesi/nobackup/uoa02626/results/bamUtil/bin/bam clipOverlap --in ${base}_${REFNAME}_sorted_dedup.bam --out ${base}_${REFNAME}_sorted_dedup_overlapclipped.bam --stats
