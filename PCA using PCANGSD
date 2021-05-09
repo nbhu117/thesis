@@ -32,6 +32,7 @@ Pregnant=pop_info$Pregnant_1 #V8
 
 C<-as.matrix(read.table("/Users/nxyati/Desktop/Results/PCAngsd.cov"))
 e<-eigen(C)
+eigenvectors=e$vectors
 length_max<-min(length(sample_ID),length(Population),length(eigenvectors),length(e$values),length(Age),length(Population1),length(Sex),length(Pregnant))
 length_min<-min(length(sample_ID),length(Population),length(eigenvectors),length(e$values),length(Age),length(Population1),length(Sex),length(Pregnant))
 pca.vectors=as.data.frame(cbind(sample_ID[1:length_max], Population[1:length_max], eigenvectors[1:length_max],e$values[1:length_max],Age[1:length_max],Population1[1:length_max],Sex[1:length_max],Pregnant[1:length_max]))
