@@ -1,25 +1,49 @@
 #!/bin/bash -e
 #SBATCH --job-name=FastQC
 #SBATCH --account=uoa02626
-#SBATCH --time=72:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=36GB
 #SBATCH --mail-user=nbhu117@aucklanduni.ac.nzan
 #SBATCH --mail-type=ALL
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=18
+#SBATCH --cpus-per-task=1
 #SBATCH -D /nesi/nobackup/uoa02626/pcangsd/
 
 module load Python-Geo/3.8.2-gimkl-2020a
 
-for fq1 in /nesi/nobackup/uoa02626/pcangsd/beagle/*.beagle.gz
-do
-echo "working with file $fq1"
 
-base=$(basename -s .beagle.gz $fq1) #check the final file created by angsd first.
-echo "base name is $base"
+python /nesi/nobackup/uoa02626/pcangsd/pcangsd/pcangsd.py -beagle A1_genolike.beagle.gz -out PCAngsd
 
-fq1=/nesi/nobackup/uoa02626/pcangsd/beagle/${base}.beagle.gz
+#scp .cov file to local machine fo plotting
 
-python /nesi/nobackup/uoa02626/pcangsd/pcangsd/pcangsd.py -beagle $fq1 -out PCAngsd —threads 18
+#Open R
+library("ggplot2")
+library("readr")
+pop_info=read.csv("pop.info")
+sample_ID=pop_info$Sample_code #V1
+Population=pop_info$MU #V2
+#eigenvectors are V3
+#eigenvalues are V4
+Age=pop_info$’Age class’ #V5
+Population1=pop_info$MU_1 #V6
+Sex=pop_info$Sex_1 #V7
+Pregnant=pop_info$Pregnant_1 #V8
 
-done
+
+C<-as.matrix(read.table("/Users/nxyati/Desktop/Results/PCAngsd.cov"))
+e<-eigen(C)
+length_max<-min(length(sample_ID),length(Population),length(eigenvectors),length(e$values),length(Age),length(Population1),length(Sex),length(Pregnant))
+length_min<-min(length(sample_ID),length(Population),length(eigenvectors),length(e$values),length(Age),length(Population1),length(Sex),length(Pregnant))
+pca.vectors=as.data.frame(cbind(sample_ID[1:length_max], Population[1:length_max], eigenvectors[1:length_max],e$values[1:length_max],Age[1:length_max],Population1[1:length_max],Sex[1:length_max],Pregnant[1:length_max]))
+df=type_convert(pca.vectors)
+pca.eigenval.sum=sum(e$values)
+varPC1<-(e$values[1]/pca.eigenval.sum)*100
+varPC2<-(e$values[2]/pca.eigenval.sum)*100
+varPC3<-(e$values[3]/pca.eigenval.sum)*100
+varPC4<-(e$values[4]/pca.eigenval.sum)*100
+
+pca=ggplot(data=df, aes(x=V3,y=eigenvectors[,2])) + geom_point(aes(color=factor(V6),shape=factor(V7)))
+ggsave(filename ="PCA_sex.png", plot = pca, height = 18, width = 18, units = "cm")
+dev.off()
+
+#Close R
