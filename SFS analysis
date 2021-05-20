@@ -20,11 +20,6 @@ module load Python-Geo/3.8.2-gimkl-2020a
 
 /nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_skye.saf.idx SFS_orkney.saf.idx -P 18 -fold 1 -r NW_022589713.1 > 2Dsfs_scaffold10.ml
 
-#Plotting in R
-
-sfs<-scan("2Dsfs_scaffold10.ml”)
-barplot(sfs[-1]) 
-
 #Confidence intervals calculation by bootstrapping
 
 /nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_skye.saf.idx -bootstrap 100 -P 18
@@ -35,9 +30,12 @@ barplot(sfs[-1])
 
 /nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_a1.saf.idx -P 18 > sfs_global.ml
 
-#In R
+#Plotting in R
 
-sfs<-scan("sfs_global.ml”)
+sfs<-scan("2Dsfs_scaffold10.ml”)
+barplot(sfs[-1]) 
+
+sfs_gl<-scan("sfs_global.ml”)
 barplot(sfs, legend=paste("Variability:= ",round(pvar,3),"%"),xlab="Chromosomes",
 names=1:length(sfs),ylab="Proportions",main="mySFS plot",col='blue')
 
