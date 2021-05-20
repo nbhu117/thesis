@@ -35,7 +35,7 @@ module load Python-Geo/3.8.2-gimkl-2020a
 sfs<-scan("2Dsfs_scaffold10.ml”)
 barplot(sfs[-1])
 
-#In R
+#Global SFS In R
 
 x<-scan("sfs_global.ml”)
 barplot(x, legend=paste("Variability:= ",round(pvar,3),"%"),xlab="Chromosomes",
@@ -45,5 +45,8 @@ names=1:length(sfs),ylab="Proportions",main="mySFS plot",col='blue')
 
 a<-scan(“sfs_global.ml")
 a[2]/sum(a)
+
+
+
 
 
