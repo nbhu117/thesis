@@ -1,0 +1,48 @@
+#!/bin/bash -e
+#SBATCH --job-name=SFS
+#SBATCH --account=uoa02626
+#SBATCH --time=72:00:00
+#SBATCH --mem=12GB
+#SBATCH --mail-user=nbhu117@aucklanduni.ac.nz
+#SBATCH --mail-type=ALL
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=18
+#SBATCH -D /nesi/nobackup/uoa02626/pcangsd/beagle/testbeagle/
+
+
+module load SAMtools/1.10-GCC-9.2.0
+module load BEDTools/2.29.2-GCC-9.2.0
+module load GCCcore/5.4.0
+#module load angsd/0.923-gimkl-2017a
+module load Python-Geo/3.8.2-gimkl-2020a
+
+#SFS for the first 10 scaffolds
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_skye.saf.idx SFS_orkney.saf.idx -P 18 -fold 1 -r NW_022589713.1 > 2Dsfs_scaffold10.ml
+
+#Plotting in R
+
+sfs<-scan("2Dsfs_scaffold10.ml”)
+barplot(sfs[-1]) 
+
+#Confidence intervals calculation by bootstrapping
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_skye.saf.idx -bootstrap 100 -P 18
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_orkney.saf.idx -bootstrap 100 -P 18
+
+#Global SFS (Orkney + Skye combined file)
+
+/nesi/nobackup/uoa02626/pcangsd/angsd/misc/realSFS SFS_a1.saf.idx -P 18 > sfs_global.ml
+
+#In R
+
+sfs<-scan("sfs_global.ml”)
+barplot(sfs, legend=paste("Variability:= ",round(pvar,3),"%"),xlab="Chromosomes",
+names=1:length(sfs),ylab="Proportions",main="mySFS plot",col='blue')
+
+#Heterozygosity estimate in R
+
+a<-scan(“sfs_global.ml")
+a[2]/sum(a)
+
